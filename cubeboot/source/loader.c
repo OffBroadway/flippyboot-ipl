@@ -9,7 +9,12 @@
 #include "print.h"
 #include "halt.h"
 
+#include "config.h"
+
 #include "boot/sidestep.h"
+
+#define AUTOLOAD_ARG_INDEX 1
+#define AUTOBOOT_ARG_INDEX 2
 
 char *swiss_paths[] = {
     "/BOOT.DOL",
@@ -90,10 +95,25 @@ void load_program() {
 
     static char *argv[] = {
         "boot.dol",
-        // "Autoload=gcldr:/XD.iso",
-        // "Autoboot=Yes",
+        NULL,
+        NULL,
+#ifdef GECKO_PRINT_ENABLE
+        "Enable Debug=Yes",
+#endif
+        "BS2Boot=No",
         NULL,
     };
+
+    // temp
+    u32 force_autoboot = 1;
+
+    if (force_autoboot) {
+        argv[AUTOLOAD_ARG_INDEX] = "Autoload=gcldr:/XD.iso";
+        argv[AUTOBOOT_ARG_INDEX] = "AutoBoot=Yes";
+    } else {
+        argv[AUTOLOAD_ARG_INDEX] = "Autoload=";
+        argv[AUTOBOOT_ARG_INDEX] = "AutoBoot=No";
+    }
 
     size_t argc = memlen(argv);
     DOLtoARAM(dol_buf, argc, argv);
