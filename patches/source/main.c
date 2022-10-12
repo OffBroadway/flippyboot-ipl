@@ -37,6 +37,8 @@ __attribute_data__ u32 start_game = 0;
 __attribute_data__ u8 *cube_text_tex = NULL;
 __attribute_data__ u32 force_progressive = 0;
 
+__attribute_data__ static int fix_pal_ntsc = 0;
+
 __attribute_used__ u32 bs2tick() {
     if (start_game && !force_boot_menu) {
         return STATE_START_GAME;
@@ -273,11 +275,31 @@ __attribute_used__ void mod_cube_text() {
         }
 }
 
+
+__attribute_used__ void mod_cube_anim() {
+    if (fix_pal_ntsc) {
+        cube_state->cube_side_frames = 10;
+        cube_state->cube_corner_frames = 16;
+        cube_state->fall_anim_frames = 5;
+        cube_state->fall_delay_frames = 16;
+        cube_state->up_anim_frames = 18;
+        cube_state->up_delay_frames = 7;
+        cube_state->move_anim_frames = 10;
+        cube_state->move_delay_frames = 20;
+        cube_state->done_delay_frames = 40;
+        cube_state->logo_hold_frames = 60;
+        cube_state->logo_delay_frames = 5;
+        cube_state->audio_cue_frames_b = 7;
+        cube_state->audio_cue_frames_c = 6;
+    }
+}
+
 __attribute_used__ void pre_cube_init() {
     cube_init();
 
     mod_cube_colors();
     mod_cube_text();
+    mod_cube_anim();
 }
 
 __attribute_used__ void pre_main() {
@@ -285,11 +307,27 @@ __attribute_used__ void pre_main() {
 
     if (force_progressive) {
         OSReport("Patching video mode to Progressive Scan\n");
-        rmode->viTVMode |= VI_PROGRESSIVE;
+        fix_pal_ntsc = rmode->viTVMode >> 2 != VI_NTSC;
+        if (fix_pal_ntsc) {
+            rmode->fbWidth = 592;
+            rmode->efbHeight = 226;
+            rmode->xfbHeight = 448;
+            rmode->viXOrigin = 40;
+            rmode->viYOrigin = 16;
+            rmode->viWidth = 640;
+            rmode->viHeight = 448;
+        }
+
+        rmode->viTVMode = VI_TVMODE_NTSC_PROG;
         rmode->xfbMode = VI_XFBMODE_SF;
 
-        static u8 progressive_vfilter[7] = {0, 0, 21, 22, 21, 0, 0};
-        memcpy(rmode->vfilter, progressive_vfilter, sizeof(progressive_vfilter));
+        rmode->vfilter[0] = 0;
+        rmode->vfilter[1] = 0;
+        rmode->vfilter[2] = 21;
+        rmode->vfilter[3] = 22;
+        rmode->vfilter[4] = 21;
+        rmode->vfilter[5] = 0;
+        rmode->vfilter[6] = 0;
     }
 
     // can't boot dol
@@ -303,6 +341,10 @@ __attribute_used__ void pre_main() {
     main();
 
     __builtin_unreachable();
+}
+
+__attribute_used__ u32 get_tvmode() {
+    return rmode->viTVMode;
 }
 
 __attribute_used__ void bs2start() {

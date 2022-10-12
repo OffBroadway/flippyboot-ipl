@@ -46,4 +46,6 @@ patch_inst_pal  "_replace_report" 0x8135d924 0x8135a264 0x81300520 b usb_OSRepor
 patch_inst_ntsc "_patch_cube_init" 0x8130e9b4 0x8130ebac 0x8130ef20 0x8130ef38 bl pre_cube_init
 patch_inst_pal  "_patch_cube_init" 0x8130f2c8 0x8130ead8 0x8130f408 bl pre_cube_init
 
+patch_inst_pal "_fix_video_mode_init" 0x81300520 0x81300520 0x81300610 bl get_tvmode
+
 patch_inst_global "_patch_pre_main" 0x81300090 bl pre_main

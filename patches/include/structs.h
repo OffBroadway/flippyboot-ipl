@@ -18,8 +18,8 @@ typedef struct state_t {
 
     u16 unk5;
     s16 unk6;
-    s16 unk7;
-    s16 unk8;
+    s16 cube_side_frames;
+    s16 cube_corner_frames;
     s16 unk9;
     s16 unk10;
     
@@ -27,11 +27,11 @@ typedef struct state_t {
     u8 unk12;
     u8 unk13;
     u8 unk14;
-
     u8 unk15;
     u8 unk16;
-    u8 unk17;
-    u8 unk18;
+
+    u8 fall_anim_frames;
+    u8 fall_delay_frames;
     
     f32 unk19;
     f32 unk20;
@@ -39,14 +39,14 @@ typedef struct state_t {
     f32 unk22;
 
     u8 unk23;
-    u8 unk24;
-    u8 unk25;
+    u8 up_anim_frames;
+    u8 up_delay_frames;
     u8 unk26;
     f32 unk27;
 
     u8 unk28;
-    u8 unk29;
-    u8 unk30;
+    u8 move_anim_frames;
+    u8 move_delay_frames;
 
     f32 unk31;
     f32 unk32;
@@ -54,14 +54,20 @@ typedef struct state_t {
     f32 unk34;
     f32 unk35;
 
-    u8 unk36;
+    u8 done_delay_frames;
     u8 unk37;
     u8 unk38;
-    u8 unk39;
-    u8 unk40;
+
+    u8 logo_hold_frames;
+    u8 logo_delay_frames;
 
     u8 big_size;
     GXColor color;
+
+    s16	unk41; // maybe audio related
+    s16	audio_cue_frames_a;
+    s16	audio_cue_frames_b;
+    s16	audio_cue_frames_c;
 } state;
 
 typedef struct mat_t {
