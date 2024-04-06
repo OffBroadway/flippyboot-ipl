@@ -1,0 +1,10 @@
+services:
+  cubeboot:
+    build: .
+    volumes:
+      - $HOME/keys:/root/keys
+      - .:/build
+    stdin_open: true
+    tty: true
+    stop_signal: SIGKILL  # Use SIGKILL signal to immediately kill the container
+    stop_grace_period: 1s  # Set a short grace period before force killing the container
