@@ -45,9 +45,9 @@ int iprintf(const char *fmt, ...) {
 
     level = IRQ_Disable();
     va_start(args, fmt);
-    length = vsprintf(line, fmt, args);
-    length = sprintf(buf, "(%f): %s", (f32)diff_usec(first_print, gettime()) / 1000.0, line);
-    // sprintf(buf, "(%f): %s", , line);
+    // length = vsprintf(line, fmt, args);
+    // length = sprintf(buf, "(%f): %s", (f32)diff_usec(first_print, gettime()) / 1000.0, line);
+    length = vsprintf(buf, fmt, args);
 
     write(2, buf, length);
 

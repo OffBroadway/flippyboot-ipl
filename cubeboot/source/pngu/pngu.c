@@ -814,7 +814,7 @@ int PNGU_EncodeFromGXTexture (IMGCTX ctx, PNGU_u32 width, PNGU_u32 height, void 
 }
 
 // Coded by Crayon for GRRLIB (https://github.com/GRRLIB/GRRLIB)
-int PNGU_EncodeFromEFB (IMGCTX ctx, PNGU_u32 width, PNGU_u32 height, PNGU_u32 stride)
+int PNGU_DecodeTo4x4RGBA8PNGU_EncodeFromEFB (IMGCTX ctx, PNGU_u32 width, PNGU_u32 height, PNGU_u32 stride)
 {
     int res;
     PNGU_u32 x,y, tmpy, tmpxy, regval, val;

@@ -19,7 +19,7 @@
 #include "fatfs/ff.h"
 #endif
 
-#ifdef USE_FAT_LIBFAT
+#if defined(USE_FAT_LIBFAT) || defined(USE_FAT_LIBFLIPPY)
 typedef u32 UINT;
 typedef u32 DWORD;
 typedef u32 FATFS;
@@ -35,7 +35,7 @@ typedef enum {
 } FRESULT;
 #endif
 
-#if defined(USE_FAT_FATFS) || defined(USE_FAT_LIBFAT)
+#if defined(USE_FAT_FATFS) || defined(USE_FAT_LIBFAT) || defined(USE_FAT_LIBFLIPPY)
 #define PATH_FIX(var)
 
 #define	FA_READ				0x01

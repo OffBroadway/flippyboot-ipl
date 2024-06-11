@@ -96,7 +96,9 @@ int dvd_custom_open(ipc_device_type_t device, char *path, uint8_t type, uint8_t 
     entry.type = type;
     entry.flags = flags;
 
+#if 0
     OSReport("SD Opening: %s\n", entry.name);
+#endif
 
     DCFlushRange(&entry, sizeof(file_entry_t));
 

@@ -195,8 +195,9 @@ void custom_OSReport(const char *fmt, ...) {
     static char buf[256];
 
     va_start(args, fmt);
-    int length = vsnprintf((char *)line, sizeof(line), (char *)fmt, args);
-    length = sprintf(buf, "(%f): %s", (f32)diff_usec(first_print, gettime()) / 1000.0, line);
+    int length = vsnprintf((char *)buf, sizeof(buf), (char *)fmt, args);
+    // int length = vsnprintf((char *)line, sizeof(line), (char *)fmt, args);
+    // length = sprintf(buf, "(%f): %s", (f32)diff_usec(first_print, gettime()) / 1000.0, line);
 
     custom_WriteUARTN(buf, length);
 

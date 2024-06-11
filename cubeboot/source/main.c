@@ -48,14 +48,14 @@ typedef struct {
     char path[128];
 } game_asset;
 
-static u32 prog_entrypoint, prog_dst, prog_src, prog_len;
+// static u32 prog_entrypoint, prog_dst, prog_src, prog_len;
 
 #define BS2_BASE_ADDR 0x81300000
 static void (*bs2entry)(void) = (void(*)(void))BS2_BASE_ADDR;
 
 static char stringBuffer[255];
-ATTRIBUTE_ALIGN(32) u8 current_dol_buf[750 * 1024];
-u32 current_dol_len;
+// ATTRIBUTE_ALIGN(32) u8 current_dol_buf[750 * 1024];
+// u32 current_dol_len;
 
 extern const void _start;
 extern const void _edata;
@@ -73,6 +73,35 @@ void __SYS_PreInit() {
 
     // current_dol_len = &_edata - &_start;
     // memcpy(current_dol_buf, &_start, current_dol_len);
+}
+
+void DumpHex(const void* data, size_t size) {
+	char ascii[17];
+	size_t i, j;
+	ascii[16] = '\0';
+	for (i = 0; i < size; ++i) {
+		iprintf("%02X ", ((unsigned char*)data)[i]);
+		if (((unsigned char*)data)[i] >= ' ' && ((unsigned char*)data)[i] <= '~') {
+			ascii[i % 16] = ((unsigned char*)data)[i];
+		} else {
+			ascii[i % 16] = '.';
+		}
+		if ((i+1) % 8 == 0 || i+1 == size) {
+			iprintf(" ");
+			if ((i+1) % 16 == 0) {
+				iprintf("|  %s \n", ascii);
+			} else if (i+1 == size) {
+				ascii[(i+1) % 16] = '\0';
+				if ((i+1) % 16 <= 8) {
+					iprintf(" ");
+				}
+				for (j = (i+1) % 16; j < 16; ++j) {
+					iprintf("   ");
+				}
+				iprintf("|  %s \n", ascii);
+			}
+		}
+	}
 }
 
 int main() {
@@ -153,7 +182,7 @@ int main() {
 #ifdef VIDEO_ENABLE
     iprintf("XFB = %08x [max=%x]\n", (u32)xfb, VIDEO_GetFrameBufferSize(&TVPal576ProgScale));
 #endif
-    iprintf("current_dol_len = %d\n", current_dol_len);
+    // iprintf("current_dol_len = %d\n", current_dol_len);
 
 #if 0
     // setup config device
@@ -169,7 +198,7 @@ int main() {
     if (check_load_program()) {
         can_load_dol = true;
     }
-#else
+#elif 0
     // dvd setup
     // DVDInit();
 
@@ -203,6 +232,11 @@ int main() {
         // postboot delay
         settings.postboot_delay_ms = 0;
     }
+#else
+
+    iprintf("Loading settings\n");
+    load_settings();
+
 #endif
 
 #if 0
@@ -383,28 +417,34 @@ int main() {
     // local vars
     u8 *image_data = NULL;
     if (settings.cube_logo != NULL) {
-        image_data = load_logo_texture(settings.cube_logo);
-        iprintf("img can be found at %08x\n", (u32)image_data);
+        u32 addr = get_symbol_value(symshdr, syment, symstringdata, "cube_text_tex");
+        load_logo_texture(settings.cube_logo, (void*)addr);
+        extern void DumpHex(const void* data, size_t size);
+        DumpHex((void*)addr, 0x100);
+
+        iprintf("img can be found\n");
+
+        // enable image
+        set_patch_value(symshdr, syment, symstringdata, "cube_text_loaded", 1);
     }
 
-    // load current program
-    prog_entrypoint = (u32)&_start;
-    prog_src = (u32)current_dol_buf;
-    prog_dst = (u32)&_start; // (u32*)0x80600000;
-    prog_len = current_dol_len;
+    // // load current program
+    // prog_entrypoint = (u32)&_start;
+    // prog_src = (u32)current_dol_buf;
+    // prog_dst = (u32)&_start; // (u32*)0x80600000;
+    // prog_len = current_dol_len;
 
-    iprintf("Current program start = %08x\n", prog_entrypoint);
+    // iprintf("Current program start = %08x\n", prog_entrypoint);
 
-    // Copy program metadata into place
-    set_patch_value(symshdr, syment, symstringdata, "prog_entrypoint", prog_entrypoint);
-    set_patch_value(symshdr, syment, symstringdata, "prog_src", prog_src);
-    set_patch_value(symshdr, syment, symstringdata, "prog_dst", prog_dst);
-    set_patch_value(symshdr, syment, symstringdata, "prog_len", prog_len);
+    // // Copy program metadata into place
+    // set_patch_value(symshdr, syment, symstringdata, "prog_entrypoint", prog_entrypoint);
+    // set_patch_value(symshdr, syment, symstringdata, "prog_src", prog_src);
+    // set_patch_value(symshdr, syment, symstringdata, "prog_dst", prog_dst);
+    // set_patch_value(symshdr, syment, symstringdata, "prog_len", prog_len);
 
     // Copy settings into place
     set_patch_value(symshdr, syment, symstringdata, "start_game", can_load_dol);
     set_patch_value(symshdr, syment, symstringdata, "cube_color", settings.cube_color);
-    set_patch_value(symshdr, syment, symstringdata, "cube_text_tex", (u32)image_data);
     set_patch_value(symshdr, syment, symstringdata, "force_progressive", settings.progressive_enabled);
 
     set_patch_value(symshdr, syment, symstringdata, "preboot_delay_ms", settings.preboot_delay_ms);
@@ -415,6 +455,8 @@ int main() {
 #ifdef VIDEO_ENABLE
     VIDEO_WaitVSync();
 #endif
+
+    // while(1);
 
     /*** Shutdown libOGC ***/
     GX_AbortFrame();

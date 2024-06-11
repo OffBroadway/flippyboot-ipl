@@ -139,7 +139,9 @@ void __DVDFSInit_threaded(game_backing_entry_t *backing) {
     total_entries = entry_table[0].len;
     string_table = (char*)&(entry_table[total_entries]);
 
+#ifdef PRINT_READDIR_FILES
     OSReport("FST contains %u\n", total_entries);
+#endif
     OSYieldThread();
 
     FSTEntry* p = entry_table;
@@ -148,7 +150,9 @@ void __DVDFSInit_threaded(game_backing_entry_t *backing) {
         char *string = (char*)((u32)string_table + string_offset);
         // OSReport("FST (0x%08x) entry: %s\n", FILE_POSITION(i), string);
         if (entry_table[i].filetype == T_FILE && strncmpci(string, "opening.bnr", strlen("opening.bnr")) == 0) {
+#ifdef PRINT_READDIR_FILES
             OSReport("FST (0x%08x) entry: %s\n", FILE_POSITION(i), string);
+#endif
             backing->dvd_bnr_size = FILE_LENGTH(i);
             backing->dvd_bnr_offset = FILE_POSITION(i);
             break;
@@ -203,15 +207,6 @@ const char *get_game_path(int backing_index) {
 
 static int early_file_enum() {
     u64 start_time = gettime();
-    // dvd_custom_open(IPC_DEVICE_SD, SD_TARGET_PATH, FILE_ENTRY_TYPE_DIR, 0); // reset readdir
-
-    // // TODO: fallback to WiFi
-    // file_status_t status;
-    // dvd_custom_status(IPC_DEVICE_SD, &status);
-    // if (status.result != 0) {
-    //     OSReport("PANIC: SD Card could not be opened\n");
-    //     while(1);
-    // }
 
     file_entry_t ent;
     int current_ent_index = 0;
@@ -225,6 +220,11 @@ static int early_file_enum() {
             continue;
         if (strcmp(ent.name, "boot.iso") == 0)
             continue;
+
+#if 1
+        if (strcmp(ent.name, "boot.dol") != 0)
+            continue;
+#endif
 
         char *ext = FileSuffix(ent.name);
         if (strncmpci(ext, ".iso", 4) != 0 && strncmpci(ext, ".gcm", 4) != 0 && strncmpci(ext, ".dol", 4) != 0)
@@ -287,7 +287,9 @@ void *file_enum_worker(void* param) {
             break;
         }
 
+#ifdef PRINT_READDIR_FILES
         OSReport("game backing: %d\n", i);
+#endif
         game_backing_entry_t *game_backing = sorted_raw_game_backing_list[i];
         int ret = dvd_threaded_custom_open(IPC_DEVICE_SD, game_backing->iso_path, FILE_ENTRY_TYPE_FILE, IPC_FILE_FLAG_DISABLECACHE | IPC_FILE_FLAG_DISABLEFASTSEEK);
         if (ret != 0) {
@@ -296,11 +298,15 @@ void *file_enum_worker(void* param) {
         OSYieldThread();
 
         if (game_backing->is_dol) {
+#ifdef PRINT_READDIR_FILES
             OSReport("DOL loaded: %s\n", game_backing->iso_path);
+#endif
 
             if (current_ent_index < 512) {
                 game_asset_t *asset = &(*game_assets)[current_ent_index];
+#ifdef PRINT_READDIR_FILES
                 OSReport("Claiming asset %d (@%p)\n", current_ent_index, asset);
+#endif
                 asset->backing_index = current_ent_index;
                 asset->in_use = 1;
 
@@ -317,7 +323,9 @@ void *file_enum_worker(void* param) {
             }
 
         } else {
+#ifdef PRINT_READDIR_FILES
             OSReport("BEFORE THREAD READ, %p\n", &header);
+#endif
             dvd_threaded_read(&header, sizeof(DiskHeader), 0); //Read in the disc header
             OSYieldThread();
 
@@ -335,7 +343,9 @@ void *file_enum_worker(void* param) {
             char game_id[8];
             memcpy(game_id, &header, 6);
             game_id[6] = '\x00';
+#ifdef PRINT_READDIR_FILES
             OSReport("GAME loaded: %s\n", game_id);
+#endif
 
             game_backing->fst_offset = header.FSTOffset;
             game_backing->fst_size = header.FSTSize;
@@ -343,18 +353,24 @@ void *file_enum_worker(void* param) {
 
             DCFlushRange(&header, sizeof(DiskHeader));
 
+#ifdef PRINT_READDIR_FILES
             OSReport("FSTSize = 0x%08x\n", game_backing->fst_size);
+#endif
             __DVDFSInit_threaded(game_backing);
             if (game_backing->dvd_bnr_offset == 0) {
                 OSReport("No opening.bnr found, skipping\n");
                 continue;
             }
 
+#ifdef PRINT_READDIR_FILES
             OSReport("Reading opening.bnr\n");
+#endif
             BNR *banner_buffer = &game_loading_banner;
             if (current_ent_index < 512) {
                 game_asset_t *asset = &(*game_assets)[current_ent_index];
+#ifdef PRINT_READDIR_FILES
                 OSReport("Claiming asset %d (@%p)\n", current_ent_index, asset);
+#endif
                 asset->backing_index = current_ent_index;
                 asset->in_use = 1;
 
@@ -366,8 +382,10 @@ void *file_enum_worker(void* param) {
             dvd_threaded_read(banner_buffer, game_backing->dvd_bnr_size, game_backing->dvd_bnr_offset); //Read banner file
             OSYieldThread();
 
+#ifdef PRINT_READDIR_FILES
             // print the 4 bytes of the magic
             OSReport("BNR magic: %c%c%c%c\n", banner_buffer->magic[0], banner_buffer->magic[1], banner_buffer->magic[2], banner_buffer->magic[3]);
+#endif
 
             // u32 bnr_magic = *(u32*)banner_buffer->magic[0];
             // if (bnr_magic != 0x424e5231 && bnr_magic != 0x424e5232) {

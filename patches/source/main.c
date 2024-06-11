@@ -39,8 +39,9 @@ __attribute_data__ u32 prog_len;
 __attribute_data__ u32 cube_color = 0;
 __attribute_data__ u32 start_game = 0;
 
-__attribute_data__ u8 *cube_text_tex = NULL;
-__attribute_data__ u32 force_progressive = 0;
+__attribute_data__ u8 cube_text_tex[0xdc00];
+__attribute_data__ u8 cube_text_loaded;
+__attribute_data__ u32 force_progressive;
 
 // __attribute_data__ static cubeboot_state local_state;
 // __attribute_data__ static cubeboot_state *global_state = (cubeboot_state*)0x81700000;
@@ -49,9 +50,9 @@ __attribute_data__ u32 force_progressive = 0;
 __attribute_data__ static int fix_pal_ntsc = 0;
 
 // used for optional delays
-__attribute_data__ u32 preboot_delay_ms = 0;
-__attribute_data__ u32 postboot_delay_ms = 0;
-__attribute_data__ u64 completed_time = 0;
+__attribute_data__ u32 preboot_delay_ms;
+__attribute_data__ u32 postboot_delay_ms;
+__attribute_data__ u64 completed_time;
 
 // used to start game
 __attribute_reloc__ u32 (*PADSync)();
@@ -202,6 +203,36 @@ __attribute_used__ void mod_cube_colors() {
     return;
 }
 
+void DumpHex(const void* data, size_t size) {
+	char ascii[17];
+	size_t i, j;
+	ascii[16] = '\0';
+	for (i = 0; i < size; ++i) {
+		OSReport("%02X ", ((unsigned char*)data)[i]);
+		if (((unsigned char*)data)[i] >= ' ' && ((unsigned char*)data)[i] <= '~') {
+			ascii[i % 16] = ((unsigned char*)data)[i];
+		} else {
+			ascii[i % 16] = '.';
+		}
+		if ((i+1) % 8 == 0 || i+1 == size) {
+			OSReport(" ");
+			if ((i+1) % 16 == 0) {
+				OSReport("|  %s \n", ascii);
+			} else if (i+1 == size) {
+				ascii[(i+1) % 16] = '\0';
+				if ((i+1) % 16 <= 8) {
+					OSReport(" ");
+				}
+				for (j = (i+1) % 16; j < 16; ++j) {
+					OSReport("   ");
+				}
+				OSReport("|  %s \n", ascii);
+			}
+		}
+	}
+}
+
+
 __attribute_used__ void mod_cube_text() {
         tex_data *gc_text_tex = gc_text_model->data->tex->dat;
 
@@ -216,23 +247,37 @@ __attribute_used__ void mod_cube_text() {
 #endif
 
         OSReport("CUBE TEXT TEX: %dx%d[%d] (type=%d) @ %p\n", wd, ht, img_size, gc_text_tex->format, img_ptr);
+        memset(img_ptr, 0x80, 0x3700);
         OSReport("PTR = %08x\n", (u32)cube_text_tex);
+        DumpHex(&cube_text_tex[0], 0x100);
+
+        // {
+        //     OSReport("ZEROOOO\n");
+        //     memset(cube_text_tex, 0xFF, 0xdc00);
+        // }
+
         OSReport("ORIG_PTR_PARTS = %08x, %08x\n", (u32)gc_text_tex, gc_text_tex->offset);
 
-        if (cube_text_tex != NULL) {
+        // if (cube_text_loaded) {
+            u32 cube_text_tex_ptr = (u32)&cube_text_tex[0];
             s32 desired_offset = gc_text_tex->offset;
-            if ((u32)gc_text_tex > (u32)cube_text_tex) {
-                desired_offset = -1 * (s32)((u32)gc_text_tex - (u32)cube_text_tex);
+            if ((u32)gc_text_tex > (u32)cube_text_tex_ptr) {
+                desired_offset = -1 * (s32)((u32)gc_text_tex - (u32)cube_text_tex_ptr);
             } else {
-                desired_offset = (s32)((u32)cube_text_tex - (u32)gc_text_tex);
+                desired_offset = (s32)((u32)cube_text_tex_ptr - (u32)gc_text_tex);
             }
 
             OSReport("DESIRED = %d\n", desired_offset);
+            DCFlushRange(cube_text_tex, 0xdc00);
 
             // change the texture format
             gc_text_tex->format = GX_TF_RGBA8;
             gc_text_tex->offset = desired_offset;
-        }
+            DCFlushRange(gc_text_tex, sizeof(tex_data));
+        // }
+
+        // memset(gc_text_tex, 0, sizeof(tex_data));
+        // DCFlushRange(gc_text_tex, sizeof(tex_data));
 }
 
 
@@ -325,8 +370,8 @@ __attribute_used__ void pre_main() {
     //     cube_color = 0x4A412A; // or 0x0000FF
     // }
 
-    OSReport("LOADCMD %x, %x, %x, %x\n", prog_entrypoint, prog_dst, prog_src, prog_len);
-    memmove((void*)prog_dst, (void*)prog_src, prog_len);
+    // OSReport("LOADCMD %x, %x, %x, %x\n", prog_entrypoint, prog_dst, prog_src, prog_len);
+    // memmove((void*)prog_dst, (void*)prog_src, prog_len);
 
     main();
 
@@ -362,6 +407,7 @@ __attribute_used__ u32 bs2tick() {
     frame_count++;
     if (!completed_time && cube_state->cube_anim_done) {
         OSReport("FINISHED (%d)\n", frame_count);
+        DumpHex(&cube_text_tex[0], 0x100);
         completed_time = gettime();
     }
 
@@ -389,8 +435,9 @@ __attribute_used__ u32 bs2tick() {
 #endif
 
     // TODO: allow the user to decide if they want to logo to play
+    return STATE_WAIT_LOAD;
     // return STATE_COVER_OPEN;
-    return STATE_NO_DISC;
+    // return STATE_NO_DISC;
 }
 
 __attribute__((aligned(32))) static u8 apploader_buf[0x20];

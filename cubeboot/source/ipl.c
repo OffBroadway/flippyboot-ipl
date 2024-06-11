@@ -103,7 +103,7 @@ void load_ipl() {
     }
 
 #ifdef TEST_IPL_PATH
-    int ret = dvd_custom_open(TEST_IPL_PATH, FILE_ENTRY_TYPE_FILE, IPC_FILE_FLAG_DISABLECACHE | IPC_FILE_FLAG_DISABLEFASTSEEK);
+    int ret = dvd_custom_open(IPC_DEVICE_SD, TEST_IPL_PATH, FILE_ENTRY_TYPE_FILE, IPC_FILE_FLAG_DISABLECACHE | IPC_FILE_FLAG_DISABLEFASTSEEK);
     iprintf("OPEN ret: %08x\n", ret);
 
     dvd_read(bios_buffer, IPL_SIZE, 0);

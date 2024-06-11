@@ -23,36 +23,9 @@
 #define GC_DVD_H
 
 #include <stdint.h>
+#include "ipc.h"
 
 #define DVD_READ_NORMAL 0xA8000000
-#define MAX_FILE_NAME 256
-
-enum file_entry_type_enum {
-    FILE_ENTRY_TYPE_FILE = 0,
-    FILE_ENTRY_TYPE_DIR = 1,
-    FILE_ENTRY_TYPE_MAX = 0xFF
-};
-
-typedef struct
-{
-    uint32_t result;
-	uint64_t fsize;
-    uint8_t pad[20];
-} file_status_t;
-
-enum {
-    IPC_FILE_FLAG_DISABLECACHE    = 0x01,
-    IPC_FILE_FLAG_DISABLEFASTSEEK = 0x02,
-};
-typedef struct {
-    char name[MAX_FILE_NAME];
-    uint8_t type;
-    uint8_t flags;
-    uint64_t size;
-    uint32_t date;
-    uint32_t time;
-    uint8_t pad[14];
-} file_entry_t;
 
 typedef struct __attribute__((packed, aligned(32)))
 {
@@ -65,7 +38,7 @@ typedef struct __attribute__((packed, aligned(32)))
 	uint8_t padding[120];
 } firmware_status_blob_t;
 
-typedef struct {
+typedef struct __attribute__((__packed__)) {
     uint8_t major;
     uint8_t minor;
     uint16_t build;
@@ -75,28 +48,32 @@ typedef struct __attribute__((__packed__)) {
 	u16 rev_level;
 	u16 dev_code;
 	u32 rel_date;
-	u8  pad0[4];
+	u32 fd_flags;
 	flippy_version_parts_t fw_ver;
 	u8  pad1[16];
 } dvd_info;
 
 int dvd_get_status(firmware_status_blob_t*dst);
 void dvd_bootloader_boot();
+void dvd_bootloader_update();
+void dvd_bootloader_noupdate();
 int dvd_cover_status();
 
-file_status_t *dvd_custom_status();
-int dvd_custom_open(char *path, uint8_t type, uint8_t flags);
-int dvd_custom_readdir(file_entry_t* target);
-
-int dvd_flash_open(char *path, uint8_t type);
-int dvd_flash_read(void* dst, unsigned int len, uint64_t offset);
-int dvd_flash_readdir(file_entry_t* target);
+int dvd_custom_open(ipc_device_type_t device, char *path, uint8_t type, uint8_t flags);
+int dvd_threaded_custom_open(ipc_device_type_t device, char *path, uint8_t type, uint8_t flags);
+int dvd_custom_unlink(ipc_device_type_t device, char *path);
+int dvd_custom_readdir(ipc_device_type_t device, file_entry_t *target);
+int dvd_custom_status(ipc_device_type_t device, file_status_t *target);
+void dvd_custom_set_active(ipc_device_type_t device);
+void dvd_custom_bypass();
+void dvd_custom_close(ipc_device_type_t device);
 
 void dvd_break();
 void dvd_motor_off();
 dvd_info *dvd_inquiry();
 unsigned int dvd_get_error(void);
 int dvd_read(void* dst, unsigned int len, uint64_t offset);
+int dvd_threaded_read(void* dst, unsigned int len, uint64_t offset);
 int dvd_read_id();
 int dvd_transaction_wait();
 
