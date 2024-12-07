@@ -16,6 +16,7 @@
 
 #include "dolphin_arq.h"
 #include "flippy_sync.h"
+#include "dvd_threaded.h"
 #include "gc_dvd.h"
 #include "games.h"
 
@@ -257,6 +258,7 @@ __attribute_used__ void mod_cube_anim() {
 }
 
 __attribute_used__ void pre_thread_init() {
+    DI_InitQueue();
     dolphin_ARAMInit();
     orig_thread_init();
     if (!start_passthrough_game) {

@@ -563,7 +563,7 @@ static int gm_load_banner(gm_file_entry_t *entry, u32 aram_offset, bool force_un
     }
 
     __attribute_aligned_data__ static BNR banner_buffer;
-    dvd_threaded_read(&banner_buffer, sizeof(BNR), entry->extra.dvd_bnr_offset, status->fd);
+    DI_Read(&banner_buffer, sizeof(BNR), entry->extra.dvd_bnr_offset, status->fd);
     dvd_custom_close(status->fd);
 
     entry->asset.banner.state = GM_LOAD_STATE_LOADING;
@@ -612,7 +612,7 @@ static bool gm_load_icon(gm_file_entry_t *entry, u32 aram_offset, bool force_unl
     void *file_buf = gm_malloc(file_size);
 
     // read
-    dvd_threaded_read(file_buf, file_size, 0, status->fd);
+    DI_Read(file_buf, file_size, 0, status->fd);
     dvd_custom_close(status->fd);
 
     ok_png png = gm_png_decode(file_buf, file_size);
@@ -902,6 +902,11 @@ void *gm_thread_worker(void* param) {
         OSReport("ERROR: target is NULL\n");
         return NULL;
     }
+
+    // Test only
+    extern void di_tests();
+    di_tests();
+    // while(1);
 
     gm_list_info list_info = gm_list_files(target);
     gm_setup_grid(list_info.num_paths, true);

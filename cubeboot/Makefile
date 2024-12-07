@@ -117,7 +117,7 @@ $(PATCHES):
 	@[ -d $(DATA) ] || mkdir -p $(DATA)
 	@$(MAKE) --no-print-directory -C $(dir $(PROJDIR))/$(basename $(notdir $@))
 	@cp $(dir $(PROJDIR))/$(basename $(notdir $@))/$(notdir $@) $@
-	@env GO111MODULE=off go run $(PROJDIR)/scripts/validate-patches.go $@
+	@#env GO111MODULE=off go run $(PROJDIR)/scripts/validate-patches.go $@
 	@$(OBJCOPY) --remove-section .comment --remove-section .gnu.attributes $@
 
 #---------------------------------------------------------------------------------

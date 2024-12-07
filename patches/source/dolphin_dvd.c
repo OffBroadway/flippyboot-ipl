@@ -38,7 +38,7 @@ static bnr_info_t get_banner_offset_slow(DiskHeader *header, uint32_t fd) {
     u8 *fst = (void*)0x81700000;
 
     // read FST
-    dvd_threaded_read(fst, size, offset, fd);
+    DI_Read(fst, size, offset, fd);
 
     FSTEntry *entry_table = (FSTEntry*)fst;
     u32 total_entries = entry_table[0].len;
@@ -104,14 +104,14 @@ dolphin_game_into_t get_game_info(char *game_path) {
     }
 
     __attribute__((aligned(32))) static DiskHeader header;
-    dvd_threaded_read(&header, sizeof(DiskHeader), 0, status->fd); //Read in the disc header
+    DI_Read(&header, sizeof(DiskHeader), 0, status->fd); //Read in the disc header
 
     // OSReport("DEBUG: disk header loaded\n");
 
     u32 fast_bnr_offset = get_banner_offset_fast(&header);
     // OSReport("DEBUG: Fast BNR offset: %08x\n", fast_bnr_offset);
     if (fast_bnr_offset != 0) {
-        dvd_threaded_read(small_buf, 32, fast_bnr_offset, status->fd); //Read in the banner data
+        DI_Read(small_buf, 32, fast_bnr_offset, status->fd); //Read in the banner data
 
         u32 magic = small_buf[0];
         if (magic == BANNER_MAGIC_1 || magic == BANNER_MAGIC_2) {
@@ -139,7 +139,7 @@ dolphin_game_into_t get_game_info(char *game_path) {
     // If we didn't find the banner in the fast location, try the FST
     bnr_info_t bnr_info = get_banner_offset_slow(&header, status->fd);
     if (bnr_info.offset != 0) {
-        dvd_threaded_read(small_buf, 32, bnr_info.offset, status->fd); //Read in the banner data
+        DI_Read(small_buf, 32, bnr_info.offset, status->fd); //Read in the banner data
 
         u32 magic = small_buf[0];
         if (magic == BANNER_MAGIC_1 || magic == BANNER_MAGIC_2) {

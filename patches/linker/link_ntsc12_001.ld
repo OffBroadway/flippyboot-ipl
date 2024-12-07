@@ -86,6 +86,7 @@ ntsc12_001_SetEffectivePriority = 0x81362304;
 ntsc12_001___OSGetEffectivePriority = 0x813622c8;
 ntsc12_001_OSSleepThread = 0x81362f9c;
 ntsc12_001_OSWakeupThread = 0x81363088;
+ntsc12_001_Reschedule = 0x81483b28;
 
 ntsc12_001_GXSetCurrentMtx = 0x81378338;
 ntsc12_001_ARQPostRequest = 0x81371f14;

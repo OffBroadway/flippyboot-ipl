@@ -72,6 +72,9 @@ patch_inst_pal "_gameselect_draw_helper" 0x81327e04 0x8132735c 0x81327f44 routin
 patch_inst_ntsc "_stub_dvdwait" 0x00000000 0x8130108c 0x81301440 0x81301444 nop
 patch_inst_pal  "_stub_dvdwait" 0x8130108c 0x8130108c 0x813011f8 nop
 
+patch_inst_ntsc "_stub_dvdinit" 0x813006f4 0x81300504 0x81300858 0x81300858 nop
+patch_inst_pal  "_stub_dvdinit" 0x81300504 0x81300504 0x813005f4 nop
+
 patch_inst_ntsc "_replace_bs2tick" 0x81300a70 0x81300968 0x81300d08 0x81300d0c b bs2tick
 patch_inst_pal  "_replace_bs2tick" 0x81300968 0x81300968 0x81300ac0 b bs2tick
 

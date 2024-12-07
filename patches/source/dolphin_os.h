@@ -10,6 +10,9 @@
 // gcbool
 typedef unsigned int BOOL;
 
+typedef s16 __OSInterrupt;
+typedef u32  OSInterruptMask;
+
 typedef u16 OSThreadState;
 typedef s32 OSPriority;  //  0 highest, 31 lowest
 
@@ -175,10 +178,10 @@ void OSUnlockMutex(OSMutex* mutex);
 void __OSUnlockAllMutex(OSThread* thread);
 BOOL OSTryLockMutex(OSMutex* mutex);
 
-// void OSInitCond(OSCond* cond);
-// void OSWaitCond(OSCond* cond, OSMutex* mutex);
-// void OSSignalCond(OSCond* cond);
+void OSInitCond(OSCond* cond);
+void OSWaitCond(OSCond* cond, OSMutex* mutex);
+void OSSignalCond(OSCond* cond);
 
-// void OSInitMessageQueue(OSMessageQueue* mq, OSMessage* msgArray, s32 msgCount);
-// BOOL OSSendMessage(OSMessageQueue* mq, OSMessage msg, s32 flags);
-// BOOL OSReceiveMessage(OSMessageQueue* mq, OSMessage* msg, s32 flags);
+void OSInitMessageQueue(OSMessageQueue* mq, OSMessage* msgArray, s32 msgCount);
+BOOL OSSendMessage(OSMessageQueue* mq, OSMessage msg, s32 flags);
+BOOL OSReceiveMessage(OSMessageQueue* mq, OSMessage* msg, s32 flags);
