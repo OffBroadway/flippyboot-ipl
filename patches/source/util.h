@@ -85,6 +85,8 @@ inline void dump_small_color(char *line, GXColor *input) {
     }
 
     GXColor cs_temp = *input;
+    (void)cs_temp;
+
     OSReport("COLOR: %s = %02x%02x%02x\n", line, cs_temp.r, cs_temp.g, cs_temp.b);
 }
 

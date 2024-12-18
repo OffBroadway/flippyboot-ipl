@@ -442,6 +442,34 @@ static void ipl_panic() {
     while(1);
 }
 
+static char *hidden_file_names[] = {
+    // Windows
+    "desktop.ini",
+    "Thumbs.db",
+    "$RECYCLE.BIN",
+    "System Volume Information",
+    "Recovery",
+    "Recovery.txt",
+    "autorun.inf",
+    // GameCube
+    "swiss",
+    "MCBACKUP",
+};
+
+static bool check_file_hidden(const char *name) {
+    if (name[0] == '.') return true;
+    if (name[0] == '~') return true;
+    
+    int length = strlen(name);
+    if (name[length - 1] == '~') return true;
+
+    for (int i = 0; i < countof(hidden_file_names); i++) {
+        if (strcasecmp(name, hidden_file_names[i]) == 0) return true;
+    }
+
+    return false;
+}
+
 int gm_cmp_path_entry(const void* ptr_a, const void* ptr_b){
     const gm_path_entry_t *obj_a = *(gm_path_entry_t**)ptr_a;
     const gm_path_entry_t *obj_b = *(gm_path_entry_t**)ptr_b;
@@ -492,7 +520,8 @@ gm_list_info gm_list_files(const char *target_dir) {
         if (ret != 0) ipl_panic();
 
         if (ent.name[0] == 0) break; // end of directory
-        // if (ent.type == FILE_ENTRY_TYPE_DIR) continue; // TODO: add DIR listing
+        // if (ent.types & FILE_ENTRY_TYPES_HIDDEN) continue; // skip hidden files
+        if (check_file_hidden(ent.name)) continue; // skip hidden files
 
         // only check file ext for now
         gm_file_type_t file_type = GM_FILE_TYPE_UNKNOWN;
