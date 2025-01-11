@@ -114,9 +114,9 @@ void load_settings() {
     }
 
     // force_legacy_boot
-    int force_legacy_boot = 0;
+    int force_legacy_boot = 1;
     if (!ini_sget(conf, "cubeboot", "force_legacy_boot", "%d", &force_legacy_boot)) {
-        settings.force_legacy_boot = 0;
+        settings.force_legacy_boot = 1;
     } else {
         iprintf("Found force_legacy_boot = %d\n", force_legacy_boot);
         settings.force_legacy_boot = force_legacy_boot;
